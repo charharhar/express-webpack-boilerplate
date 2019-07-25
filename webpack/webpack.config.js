@@ -129,8 +129,30 @@ function configFactory(env, argv) {
           ])
         },
         {
-         test: /\.(png|svg|jpg|jpeg|gif)$/,
-         loader: 'file-loader',
+          test: /\.(png|svg|jpe?g|gif)$/,
+          use: [
+            'file-loader',
+            {
+              loader: 'image-webpack-loader',
+              options: {
+                mozjpeg: {
+                  progressive: true,
+                  enabled: true,
+                  quality: 65,
+                },
+                gifsicle: {
+                  interlaced: false,
+                },
+                optipng: {
+                  optimizationLevel: 7,
+                },
+                pngquant: {
+                  quality: '65-90',
+                  speed: 4,
+                },
+              },
+            },
+          ]
         },
       ]
     },
