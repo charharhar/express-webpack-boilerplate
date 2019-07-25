@@ -32,7 +32,8 @@
     "webpack-cli": "^3.3.6",
     "webpack-dev-middleware": "^3.7.0",
     "webpack-hot-middleware": "^2.25.0",
-    "webpack-node-externals": "^1.7.2"
+    "webpack-node-externals": "^1.7.2",
+    "webpack-notifier": "^1.8.0"
   },
   "scripts": {
     "develop": "rm -rf dist && webpack --config webpack/webpack.server.config.js --mode development && node ./dist/server.js",
