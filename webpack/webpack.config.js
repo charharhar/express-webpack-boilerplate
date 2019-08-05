@@ -1,4 +1,5 @@
 const path = require('path')
+const fs = require('fs');
 const { path: appRoot } = require('app-root-path')
 const webpack = require('webpack')
 const HtmlWebPackPlugin = require('html-webpack-plugin')
@@ -18,6 +19,44 @@ function ifElse (condition) {
   }
 }
 
+function getHtmlWebPackViews() {
+  const htmlWebPackViews = [];
+  const viewsDir = path.resolve(appRoot, './views')
+  const files = fs.readdirSync(viewsDir);
+
+  files.forEach(fileName => {
+    const fileNoExt = fileName.split('.')[0];
+
+    htmlWebPackViews.push(
+      new HtmlWebPackPlugin({
+        filename: fileName,
+        template: path.resolve(viewsDir, fileName),
+        excludeChunks: ['server'],
+        chunks: [fileNoExt],
+      })
+    )
+  })
+
+  return htmlWebPackViews;
+}
+
+function getEntryScripts(ifDev) {
+  const entryScripts = {};
+  const scriptsDir = path.resolve(appRoot, './public/js');
+  const files = fs.readdirSync(scriptsDir);
+
+  files.forEach(fileName => {
+    const fileNoExt = fileName.split('.')[0];
+
+    entryScripts[fileNoExt] = removeEmpty([
+      ifDev('webpack-hot-middleware/client?path=/__webpack_hmr&timeout=20000'),
+      path.resolve(appRoot, scriptsDir, fileNoExt),
+    ])
+  })
+
+  return entryScripts;
+}
+
 function configFactory(env, argv) {
   const isDev = argv.mode === 'development';
   const isProd = argv.mode === 'production';
@@ -26,20 +65,12 @@ function configFactory(env, argv) {
   const ifProd = ifElse(isProd);
 
   let webpackConfig = {
-    entry: {
-      home: removeEmpty([
-        ifDev('webpack-hot-middleware/client?path=/__webpack_hmr&timeout=20000'),
-        path.resolve(appRoot, './public/js/home'),
-      ]),
-      about: removeEmpty([
-        ifDev('webpack-hot-middleware/client?path=/__webpack_hmr&timeout=20000'),
-        path.resolve(appRoot, './public/js/about'),
-      ]),
-    },
+    entry: getEntryScripts(ifDev),
 
     output: {
       path: path.join(appRoot, './dist'),
-      filename: '[name].js',
+      filename: 'js/[name].js',
+      chunkFilename: 'js/[name].js',
       publicPath: ifDev('http://localhost:3000/build/', '/'),
     },
 
@@ -59,7 +90,19 @@ function configFactory(env, argv) {
           })
         ),
         ifProd(() => new OptimizeCSSAssetsPlugin({})),
-      ])
+      ]),
+    },
+
+    resolve: {
+      extensions: ['.js'],
+      modules: ['node_modules'],
+      alias: {
+        "TweenMax": path.resolve('node_modules', 'gsap/src/uncompressed/TweenMax.js'),
+        "TimelineMax": path.resolve('node_modules', 'gsap/src/uncompressed/TimelineMax.js'),
+        "ScrollMagic": path.resolve('node_modules', 'scrollmagic/scrollmagic/uncompressed/ScrollMagic.js'),
+        "animation.gsap": path.resolve('node_modules', 'scrollmagic/scrollmagic/uncompressed/plugins/animation.gsap.js'),
+        "debug.addIndicators": path.resolve('node_modules', 'scrollmagic/scrollmagic/uncompressed/plugins/debug.addIndicators.js')
+      }
     },
 
     module: {
@@ -159,19 +202,7 @@ function configFactory(env, argv) {
     },
 
     plugins: removeEmpty([
-      new HtmlWebPackPlugin({
-        template: path.resolve(appRoot, './views/home.html'),
-        filename: './home.html',
-        excludeChunks: ['server'],
-        chunks: ['home'],
-      }),
-
-      new HtmlWebPackPlugin({
-        template: path.resolve(appRoot, './views/about.html'),
-        filename: './about.html',
-        excludeChunks: ['server'],
-        chunks: ['about'],
-      }),
+      ...getHtmlWebPackViews(),
 
       ifDev(() => new WebpackNotifierPlugin({ alwaysNotify: true })),
 
@@ -183,7 +214,7 @@ function configFactory(env, argv) {
 
       ifProd(() =>
         new MiniCssExtractPlugin({
-          filename: '[name].css',
+          filename: 'css/[name].css',
           chunkFilename: '[id].css',
         })
       )
