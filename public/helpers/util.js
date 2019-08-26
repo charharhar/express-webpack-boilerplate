@@ -27,17 +27,6 @@ export function sliceArray(nodeArray) {
   return Array.prototype.slice.call(nodeArray)
 }
 
-export function getDistanceFromLeft(el) {
-  const rect = el.getBoundingClientRect();
-  const docEl = document.documentElement;
-
-  return (rect.left + (window.pageXOffset || docEl.scrollLeft || 0))
-}
-
-export function scrollTop() {
-  return (window.pageYOffset !== undefined) ? window.pageYOffset : (document.documentElement || document.body.parentNode || document.body).scrollTop;
-}
-
 export function scrollTo(e, elem) {
   e.preventDefault();
 
@@ -46,4 +35,31 @@ export function scrollTo(e, elem) {
   $('html, body').animate({
     scrollTop: $(target).offset().top
   }, 1000);
+}
+
+export function mobileNavHandler(toggle, mobileNav) {
+  const body = document.querySelector('body');
+
+  toggle.addEventListener('click', function(e) {
+    e.preventDefault();
+
+    if (this.classList.contains('mobile-active') === true) {
+      this.classList.remove('mobile-active')
+      mobileNav.classList.remove('mobile-active')
+      body.classList.remove('mobile-active')
+
+      const scrollY = body.style.top;
+      body.style.position = '';
+      body.style.top = '';
+      window.scrollTo(0, parseInt(scrollY || '0') * -1);
+    } else {
+      const scrollY = window.scrollY;
+      body.style.top = `-${scrollY}px`;
+
+      this.classList.add('mobile-active');
+      mobileNav.classList.add('mobile-active');
+      body.classList.add('mobile-active')
+    }
+
+  });
 }

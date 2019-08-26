@@ -34,6 +34,11 @@ html, body {
   overflow-x: hidden;
 }
 
+body.mobile-active {
+  position: fixed;
+  overflow: hidden;
+}
+
 .wrapper {
   width: 100%;
 }
